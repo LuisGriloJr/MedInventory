@@ -1,0 +1,14 @@
+# Configuração local do banco
+config/conexao.php
+
+# Fotos enviadas
+uploads/equipamentos/*
+!uploads/equipamentos/.gitkeep
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
