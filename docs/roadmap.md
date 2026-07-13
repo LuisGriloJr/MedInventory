@@ -1,27 +1,22 @@
-# Roadmap - MedInventory
+# MedInventory Roadmap
 
-## Concluído
-
+## Sprint 1 ✅
 - Login
 - Dashboard
-- Cadastro de equipamentos
-- Visualização
-- Edição
-- Exclusão
+- CRUD Equipamentos
+- Upload de fotos
 - Pesquisa
-- Upload de foto
 - Patrimônio automático
-- Layout com menu lateral
-- Repositório no GitHub
 
-## Próximas etapas
+## Sprint 2 ✅
+- Cadastro de Empresas
+- Cadastro de Manutenções
+- Histórico de Manutenções
+- Conclusão automática
+- Status automático dos equipamentos
 
-- Finalizar o layout das telas
-- Cadastro rápido
-- Histórico de alterações
-- Manutenções
-- Empresas de manutenção
-- QR Code
-- Relatórios
-- Controle de usuários
-- Publicação no servidor
+## Sprint 3 🚧
+- Dashboard inteligente
+- Histórico na ficha do equipamento
+- Upload de documentos
+- Garantias

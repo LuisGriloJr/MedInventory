@@ -17,6 +17,28 @@ if (!$equipamento) {
     exit;
 }
 
+$sqlManutencoes = "
+    SELECT
+        manutencoes.id,
+        manutencoes.tipo,
+        manutencoes.status,
+        manutencoes.data_abertura,
+        manutencoes.data_conclusao,
+        manutencoes.numero_os,
+        empresas.nome AS empresa_nome
+    FROM manutencoes
+    INNER JOIN empresas
+        ON empresas.id = manutencoes.empresa_id
+    WHERE manutencoes.equipamento_id = ?
+    ORDER BY manutencoes.data_abertura DESC, manutencoes.id DESC
+";
+
+$stmtManutencoes = $conn->prepare($sqlManutencoes);
+$stmtManutencoes->bind_param("i", $id);
+$stmtManutencoes->execute();
+
+$manutencoes = $stmtManutencoes->get_result();
+
 include "../includes/header.php";
 include "../includes/sidebar.php";
 ?>
@@ -131,6 +153,104 @@ include "../includes/sidebar.php";
                 ?>
 
             </div>
+
+            <hr class="mt-4">
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Histórico de Manutenções</h4>
+
+    <a
+        href="nova_manutencao.php?equipamento_id=<?php echo $equipamento['id']; ?>"
+        class="btn btn-primary btn-sm"
+    >
+        + Nova manutenção
+    </a>
+</div>
+
+<?php if ($manutencoes->num_rows > 0): ?>
+
+    <div class="list-group">
+
+        <?php while ($manutencao = $manutencoes->fetch_assoc()): ?>
+
+            <?php
+            $corManutencao = "secondary";
+
+            if ($manutencao["status"] === "Aberta") {
+                $corManutencao = "danger";
+            }
+
+            if ($manutencao["status"] === "Em andamento") {
+                $corManutencao = "warning";
+            }
+
+            if ($manutencao["status"] === "Concluída") {
+                $corManutencao = "success";
+            }
+            ?>
+
+            <div class="list-group-item">
+
+                <div class="d-flex justify-content-between align-items-start">
+
+                    <div>
+                        <h6 class="mb-1">
+                            <?php echo htmlspecialchars($manutencao["tipo"]); ?>
+                        </h6>
+
+                        <p class="mb-1">
+                            <strong>Empresa:</strong>
+                            <?php echo htmlspecialchars($manutencao["empresa_nome"]); ?>
+                        </p>
+
+                        <small class="text-muted">
+                            Abertura:
+                            <?php
+                            echo date(
+                                "d/m/Y",
+                                strtotime($manutencao["data_abertura"])
+                            );
+                            ?>
+
+                            <?php if (!empty($manutencao["numero_os"])): ?>
+                                | OS:
+                                <?php echo htmlspecialchars($manutencao["numero_os"]); ?>
+                            <?php endif; ?>
+                        </small>
+                    </div>
+
+                    <div class="text-end">
+
+                        <span class="badge bg-<?php echo $corManutencao; ?> mb-2">
+                            <?php echo htmlspecialchars($manutencao["status"]); ?>
+                        </span>
+
+                        <br>
+
+                        <a
+                            href="visualizar_manutencao.php?id=<?php echo $manutencao['id']; ?>"
+                            class="btn btn-sm btn-outline-primary"
+                        >
+                            Ver detalhes
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        <?php endwhile; ?>
+
+    </div>
+
+<?php else: ?>
+
+    <div class="border rounded p-4 text-center text-muted">
+        Nenhuma manutenção registrada para este equipamento.
+    </div>
+
+<?php endif; ?>
 
             <div class="mt-4">
 

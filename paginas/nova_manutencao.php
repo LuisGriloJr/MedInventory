@@ -1,6 +1,7 @@
 <?php
 include "../config/protege.php";
 include "../config/conexao.php";
+$equipamentoSelecionado = $_GET["equipamento_id"] ?? "";
 
 $sqlEquipamentos = "
     SELECT id, nome, fabricante, modelo
@@ -38,24 +39,27 @@ include "../includes/sidebar.php";
                     <label class="form-label">Equipamento *</label>
 
                     <select name="equipamento_id" class="form-select" required>
-                        <option value="">Selecione o equipamento</option>
+                        <option value="">
+                            <?php
+                            echo $equipamentoSelecionado == ""
+                            ? "Selecione o equipamento"
+                            : "Alterar equipamento";
+                             ?>
+                        </option>
 
                         <?php while ($equipamento = $equipamentos->fetch_assoc()): ?>
-                            <option value="<?php echo $equipamento["id"]; ?>">
+                            <option
+                                value="<?php echo $equipamento["id"]; ?>"
                                 <?php
-                                echo str_pad(
-                                    $equipamento["id"],
-                                    4,
-                                    "0",
-                                    STR_PAD_LEFT
-                                );
-
-                                echo " - ";
-                                echo htmlspecialchars($equipamento["nome"]);
-                                echo " - ";
-                                echo htmlspecialchars($equipamento["fabricante"]);
-                                echo " ";
-                                echo htmlspecialchars($equipamento["modelo"]);
+                                    if ($equipamentoSelecionado == $equipamento["id"]) {
+                                        echo "selected";
+                                     }
+                                ?>
+                            >
+                                <?php
+                                    echo str_pad($equipamento["id"], 4, "0", STR_PAD_LEFT)
+                                        . " - "
+                                        . htmlspecialchars($equipamento["nome"]);
                                 ?>
                             </option>
                         <?php endwhile; ?>

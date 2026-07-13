@@ -2,37 +2,84 @@
 include "../config/protege.php";
 include "../config/conexao.php";
 
-$pesquisa = "";
+$pesquisa = trim($_GET["pesquisa"] ?? "");
+$statusFiltro = trim($_GET["status"] ?? "");
+$setorFiltro = trim($_GET["setor"] ?? "");
 
-if (isset($_GET["pesquisa"])) {
-    $pesquisa = $_GET["pesquisa"];
-}
+$termo = "%" . $pesquisa . "%";
 
-if (!empty($pesquisa)) {
-    $sql = "SELECT * FROM equipamentos 
-            WHERE id LIKE ?
-            OR nome LIKE ?
-            OR fabricante LIKE ?
-            OR modelo LIKE ?
-            OR numero_serie LIKE ?
-            OR setor LIKE ?
-            ORDER BY id DESC";
+$sql = "
+    SELECT
+        equipamentos.*,
+        manutencao_atual.tipo AS manutencao_tipo,
+        manutencao_atual.empresa_nome AS manutencao_empresa
+    FROM equipamentos
 
-    $termo = "%" . $pesquisa . "%";
+    LEFT JOIN (
+        SELECT
+            manutencoes.equipamento_id,
+            manutencoes.tipo,
+            empresas.nome AS empresa_nome
+        FROM manutencoes
 
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssssss", $termo, $termo, $termo, $termo, $termo, $termo);
-    $stmt->execute();
+        INNER JOIN empresas
+            ON empresas.id = manutencoes.empresa_id
 
-    $resultado = $stmt->get_result();
-} else {
-    $sql = "SELECT * FROM equipamentos ORDER BY id DESC";
-    $resultado = $conn->query($sql);
-}
+        WHERE manutencoes.status IN ('Aberta', 'Em andamento')
+    ) AS manutencao_atual
+        ON manutencao_atual.equipamento_id = equipamentos.id
+
+    WHERE
+        (
+            ? = ''
+            OR CAST(equipamentos.id AS CHAR) LIKE ?
+            OR equipamentos.nome LIKE ?
+            OR equipamentos.fabricante LIKE ?
+            OR equipamentos.modelo LIKE ?
+            OR equipamentos.numero_serie LIKE ?
+            OR equipamentos.setor LIKE ?
+        )
+        AND (? = '' OR equipamentos.status = ?)
+        AND (? = '' OR equipamentos.setor = ?)
+
+    ORDER BY equipamentos.id DESC
+";
+
+$stmt = $conn->prepare($sql);
+
+$stmt->bind_param(
+    "sssssssssss",
+    $pesquisa,
+    $termo,
+    $termo,
+    $termo,
+    $termo,
+    $termo,
+    $termo,
+    $statusFiltro,
+    $statusFiltro,
+    $setorFiltro,
+    $setorFiltro
+);
+
+$stmt->execute();
+$resultado = $stmt->get_result();
+
+$sqlSetores = "
+    SELECT DISTINCT setor
+    FROM equipamentos
+    WHERE setor IS NOT NULL
+      AND setor != ''
+    ORDER BY setor
+";
+
+$setores = $conn->query($sqlSetores);
 
 include "../includes/header.php";
 include "../includes/sidebar.php";
 ?>
+
+
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -59,23 +106,95 @@ include "../includes/sidebar.php";
 
 <div class="card shadow-sm border-0 mb-4">
     <div class="card-body">
-        <form method="GET" class="row g-2">
-            <div class="col-md-10">
-                <input 
-                    type="text" 
-                    name="pesquisa" 
+
+        <form method="GET" class="row g-3">
+
+            <div class="col-md-5">
+                <label class="form-label">Pesquisar</label>
+
+                <input
+                    type="text"
+                    name="pesquisa"
                     class="form-control"
-                    placeholder="Pesquisar por patrimônio, nome, marca, modelo, número de série ou setor"
+                    placeholder="Patrimônio, nome, fabricante, modelo ou série"
                     value="<?php echo htmlspecialchars($pesquisa); ?>"
                 >
             </div>
 
-            <div class="col-md-2">
-                <button class="btn btn-primary w-100" type="submit">
-                    Pesquisar
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+
+                <select name="status" class="form-select">
+                    <option value="">Todos os status</option>
+
+                    <option value="Em uso"
+                        <?php if ($statusFiltro === "Em uso") echo "selected"; ?>>
+                        Em uso
+                    </option>
+
+                    <option value="Manutenção"
+                        <?php if ($statusFiltro === "Manutenção") echo "selected"; ?>>
+                        Manutenção
+                    </option>
+
+                    <option value="Estoque"
+                        <?php if ($statusFiltro === "Estoque") echo "selected"; ?>>
+                        Estoque
+                    </option>
+
+                    <option value="Baixado"
+                        <?php if ($statusFiltro === "Baixado") echo "selected"; ?>>
+                        Baixado
+                    </option>
+
+                    <option value="Desativado"
+                        <?php if ($statusFiltro === "Desativado") echo "selected"; ?>>
+                        Desativado
+                    </option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Setor</label>
+
+                <select name="setor" class="form-select">
+                    <option value="">Todos os setores</option>
+
+                    <?php while ($setor = $setores->fetch_assoc()): ?>
+                        <option
+                            value="<?php echo htmlspecialchars($setor["setor"]); ?>"
+                            <?php
+                            if ($setorFiltro === $setor["setor"]) {
+                                echo "selected";
+                            }
+                            ?>
+                        >
+                            <?php echo htmlspecialchars($setor["setor"]); ?>
+                        </option>
+                    <?php endwhile; ?>
+                </select>
+            </div>
+
+            <div class="col-md-1 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    Filtrar
                 </button>
             </div>
+
+            <?php if (
+                $pesquisa !== ""
+                || $statusFiltro !== ""
+                || $setorFiltro !== ""
+            ): ?>
+                <div class="col-12">
+                    <a href="listar.php" class="btn btn-sm btn-outline-secondary">
+                        Limpar filtros
+                    </a>
+                </div>
+            <?php endif; ?>
+
         </form>
+
     </div>
 </div>
 
@@ -92,6 +211,7 @@ include "../includes/sidebar.php";
                     <th>Modelo</th>
                     <th>Setor</th>
                     <th>Status</th>
+                    <th>Manutenção Atual</th>
                     <th width="190">Ações</th>
                 </tr>
             </thead>
@@ -125,6 +245,25 @@ include "../includes/sidebar.php";
                                     <span class="badge bg-secondary"><?php echo htmlspecialchars($equipamento['status']); ?></span>
                                 <?php endif; ?>
                             </td>
+                            <td>
+                                <?php if (!empty($equipamento["manutencao_tipo"])): ?>
+
+                                    <strong>
+                                        <?php echo htmlspecialchars($equipamento["manutencao_tipo"]); ?>
+                                    </strong>
+
+                                    <br>
+
+                                    <small class="text-muted">
+                                        <?php echo htmlspecialchars($equipamento["manutencao_empresa"]); ?>
+                                    </small>
+
+                                    <?php else: ?>
+
+                                    <span class="text-muted">—</span>
+
+                                <?php endif; ?>
+                            </td>
 
                             <td>
                                 <a href="visualizar.php?id=<?php echo $equipamento['id']; ?>" class="btn btn-sm btn-info text-white">Ver</a>
@@ -141,7 +280,7 @@ include "../includes/sidebar.php";
                     <?php endwhile; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="8" class="text-center text-muted">
+                        <td colspan="9" class="text-center text-muted">
                             Nenhum equipamento encontrado.
                         </td>
                     </tr>

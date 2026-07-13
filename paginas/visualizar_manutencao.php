@@ -58,6 +58,13 @@ include "../includes/sidebar.php";
         Concluir manutenção
      </button>
     <?php endif; ?>
+    <a
+        href="anexos_manutencao.php?manutencao_id=<?php echo $manutencao["id"]; ?>"
+        class="btn btn-outline-primary me-2"
+    >
+        📎 Arquivos
+    </a>
+
     <a href="listar_manutencoes.php" class="btn btn-secondary">
         Voltar
     </a>
