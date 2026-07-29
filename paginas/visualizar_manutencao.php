@@ -58,6 +58,15 @@ include "../includes/sidebar.php";
         Concluir manutenção
      </button>
     <?php endif; ?>
+
+    <a
+        href="imprimir_os.php?id=<?php echo $manutencao["id"]; ?>"
+        class="btn btn-outline-dark me-2"
+        
+    >
+        Imprimir OS
+    </a>
+
     <a
         href="anexos_manutencao.php?manutencao_id=<?php echo $manutencao["id"]; ?>"
         class="btn btn-outline-primary me-2"
