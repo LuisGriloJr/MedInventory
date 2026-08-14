@@ -39,6 +39,45 @@ $stmtManutencoes->execute();
 
 $manutencoes = $stmtManutencoes->get_result();
 
+$sqlAcessorios = "
+    SELECT
+        acessorios.id,
+        acessorios.nome,
+        acessorios.descricao
+    FROM equipamentos_acessorios
+    INNER JOIN acessorios
+        ON acessorios.id = equipamentos_acessorios.acessorio_id
+    WHERE equipamentos_acessorios.equipamento_id = ?
+    ORDER BY acessorios.nome ASC
+";
+
+
+
+$stmtAcessorios = $conn->prepare($sqlAcessorios);
+$stmtAcessorios->bind_param("i", $id);
+$stmtAcessorios->execute();
+
+$acessorios = $stmtAcessorios->get_result();
+
+$sqlTodosAcessorios = "
+    SELECT
+        acessorios.id,
+        acessorios.nome
+    FROM acessorios
+    WHERE acessorios.id NOT IN (
+        SELECT acessorio_id
+        FROM equipamentos_acessorios
+        WHERE equipamento_id = ?
+    )
+    ORDER BY acessorios.nome ASC
+";
+
+$stmtTodosAcessorios = $conn->prepare($sqlTodosAcessorios);
+$stmtTodosAcessorios->bind_param("i", $id);
+$stmtTodosAcessorios->execute();
+
+$todosAcessorios = $stmtTodosAcessorios->get_result();
+
 include "../includes/header.php";
 include "../includes/sidebar.php";
 ?>
@@ -155,6 +194,162 @@ include "../includes/sidebar.php";
             </div>
 
             <hr class="mt-4">
+
+<hr class="mt-4">
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+
+    <h4 class="mb-0">
+        Acessórios
+    </h4>
+
+    <button
+        type="button"
+        class="btn btn-sm btn-primary"
+        data-bs-toggle="modal"
+        data-bs-target="#modalAdicionarAcessorio"
+    >
+        + Adicionar acessório
+    </button>
+
+</div>
+
+<?php if ($acessorios->num_rows > 0): ?>
+
+    <div class="list-group mb-4">
+
+        <?php while ($acessorio = $acessorios->fetch_assoc()): ?>
+
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+
+                <div>
+
+                    <strong>
+                        <?php echo htmlspecialchars($acessorio["nome"]); ?>
+                    </strong>
+
+                    <?php if (!empty($acessorio["descricao"])): ?>
+
+                        <div class="small text-muted mt-1">
+                            <?php echo htmlspecialchars($acessorio["descricao"]); ?>
+                        </div>
+
+                    <?php endif; ?>
+
+                </div>
+
+                <a
+                    href="remover_acessorio.php?equipamento_id=<?php echo (int) $equipamento["id"]; ?>&acessorio_id=<?php echo (int) $acessorio["id"]; ?>"
+                    class="btn btn-sm btn-outline-danger"
+                    onclick="return confirm('Deseja remover este acessório deste equipamento?');"
+                >
+                    Remover
+                </a>
+
+            </div>
+
+        <?php endwhile; ?>
+
+    </div>
+
+<?php else: ?>
+
+    <div class="border rounded p-3 text-muted mb-4">
+        Nenhum acessório vinculado a este equipamento.
+    </div>
+
+<?php endif; ?>
+
+
+<div
+    class="modal fade"
+    id="modalAdicionarAcessorio"
+    tabindex="-1"
+    aria-hidden="true"
+>
+    <div class="modal-dialog">
+
+        <div class="modal-content">
+
+            <form action="vincular_acessorio.php" method="POST">
+
+                <div class="modal-header">
+
+                    <h5 class="modal-title">
+                        Adicionar acessório
+                    </h5>
+
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                    ></button>
+
+                </div>
+
+                <div class="modal-body">
+
+                    <input
+                        type="hidden"
+                        name="equipamento_id"
+                        value="<?php echo (int) $equipamento["id"]; ?>"
+                    >
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Acessório
+                        </label>
+
+                        <select
+                            name="acessorio_id"
+                            class="form-select"
+                            required
+                        >
+
+                            <option value="">
+                                Selecione...
+                            </option>
+
+                            <?php while ($item = $todosAcessorios->fetch_assoc()): ?>
+
+                                <option value="<?php echo (int) $item["id"]; ?>">
+                                    <?php echo htmlspecialchars($item["nome"]); ?>
+                                </option>
+
+                            <?php endwhile; ?>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal"
+                    >
+                        Cancelar
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        Vincular
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+</div>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="mb-0">Histórico de Manutenções</h4>
