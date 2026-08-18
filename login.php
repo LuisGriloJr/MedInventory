@@ -5,32 +5,29 @@ include "config/conexao.php";
 
 $erro = "";
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email = $_POST["email"];
-    $senha = $_POST["senha"];
+$usuarioLogin = trim($_POST["usuario"] ?? "");
+$senha = $_POST["senha"] ?? "";
 
-    $sql = "SELECT * FROM usuarios WHERE email = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
+$sql = "SELECT * FROM usuarios WHERE usuario = ?";
 
-    $resultado = $stmt->get_result();
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("s", $usuarioLogin);
+$stmt->execute();
 
-    if ($resultado->num_rows === 1) {
-        $usuario = $resultado->fetch_assoc();
+$resultado = $stmt->get_result();
+$usuario = $resultado->fetch_assoc();
 
-        if (password_verify($senha, $usuario["senha"])) {
-            $_SESSION["usuario_id"] = $usuario["id"];
-            $_SESSION["usuario_nome"] = $usuario["nome"];
-            $_SESSION["usuario_nivel"] = $usuario["nivel"];
+if ($usuario && password_verify($senha, $usuario["senha"])) {
 
-            header("Location: index.php");
-            exit;
-        }
-    }
+    $_SESSION["usuario_id"] = $usuario["id"];
+    $_SESSION["usuario_nome"] = $usuario["nome"];
+    $_SESSION["usuario_nivel"] = $usuario["nivel"];
 
-    $erro = "E-mail ou senha inválidos.";
+    header("Location: index.php");
+    exit;
 }
+
+$erro = "Usuário ou senha inválidos.";
 ?>
 
 <!DOCTYPE html>
@@ -51,8 +48,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <?php endif; ?>
 
     <form method="POST" class="formulario">
-        <label>E-mail</label>
-        <input type="email" name="email" required>
+        <label>Usuário</label>
+        <input
+            type="text"
+        name="usuario"
+        class="form-control"
+        required
+        autocomplete="username"
+        >
 
         <label>Senha</label>
         <input type="password" name="senha" required>

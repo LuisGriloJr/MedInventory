@@ -17,6 +17,12 @@ if (!$equipamento) {
     exit;
 }
 
+$urlEquipamento = "https://cafedatarde.online/inventario-clinico/paginas/visualizar.php?id="
+    . $equipamento["id"];
+
+$urlQr = "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data="
+    . urlencode($urlEquipamento);
+
 $sqlManutencoes = "
     SELECT
         manutencoes.id,
@@ -128,6 +134,15 @@ include "../includes/sidebar.php";
                     <h5 class="text-primary">
                         Patrimônio <?php echo str_pad($equipamento['id'], 4, '0', STR_PAD_LEFT); ?>
                     </h5>
+
+                    <a
+    href="imprimir_etiqueta.php?id=<?php echo $equipamento["id"]; ?>"
+    class="btn btn-sm btn-outline-dark mt-2"
+>
+    Imprimir etiqueta
+</a>
+
+                    
                 </div>
 
                 <?php

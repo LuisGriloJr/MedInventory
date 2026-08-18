@@ -95,19 +95,25 @@ include "includes/sidebar.php";
     </div>
 </div>
 
-<div class="card shadow-sm border-0">
-    <div class="card-body">
-        <h5>Ações rápidas</h5>
+<?php if ($_SESSION["usuario_nivel"] === "admin"): ?>
 
-        <a href="paginas/cadastrar.php" class="btn btn-primary">
-            + Novo Equipamento
-        </a>
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
 
-        <a href="paginas/listar.php" class="btn btn-secondary">
-            Listar Equipamentos
-        </a>
+            <h5>Ações rápidas</h5>
+
+            <a href="paginas/cadastrar.php" class="btn btn-primary">
+                + Novo Equipamento
+            </a>
+
+            <a href="paginas/listar.php" class="btn btn-secondary">
+                Listar Equipamentos
+            </a>
+
+        </div>
     </div>
-</div>
+
+<?php endif; ?>
 
 <div class="card shadow-sm border-0 mt-4">
     <div class="card-body">

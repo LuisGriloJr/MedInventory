@@ -87,9 +87,13 @@ include "../includes/sidebar.php";
         <p class="text-muted">Lista de equipamentos cadastrados no inventário.</p>
     </div>
 
+    <?php if ($_SESSION["usuario_nivel"] === "admin"): ?>
+
     <a href="cadastrar.php" class="btn btn-primary">
         + Novo Equipamento
     </a>
+
+<?php endif; ?>
 </div>
 
 <?php if (isset($_GET['sucesso'])): ?>
@@ -266,16 +270,30 @@ include "../includes/sidebar.php";
                             </td>
 
                             <td>
-                                <a href="visualizar.php?id=<?php echo $equipamento['id']; ?>" class="btn btn-sm btn-info text-white">Ver</a>
 
-                                <a href="editar.php?id=<?php echo $equipamento['id']; ?>" class="btn btn-sm btn-warning">Editar</a>
+    <!-- Todos os usuários podem visualizar -->
+    <a href="visualizar.php?id=<?php echo $equipamento['id']; ?>"
+       class="btn btn-sm btn-info text-white">
+        Ver
+    </a>
 
-                                <a href="../excluir.php?id=<?php echo $equipamento['id']; ?>" 
-                                   class="btn btn-sm btn-danger"
-                                   onclick="return confirm('Tem certeza que deseja remover este equipamento?');">
-                                   Remover
-                                </a>
-                            </td>
+    <!-- Somente administrador pode editar ou remover -->
+    <?php if ($_SESSION["usuario_nivel"] === "admin"): ?>
+
+        <a href="editar.php?id=<?php echo $equipamento['id']; ?>"
+           class="btn btn-sm btn-warning">
+            Editar
+        </a>
+
+        <a href="../excluir.php?id=<?php echo $equipamento['id']; ?>"
+           class="btn btn-sm btn-danger"
+           onclick="return confirm('Tem certeza que deseja remover este equipamento?');">
+            Remover
+        </a>
+
+    <?php endif; ?>
+
+</td>
                         </tr>
                     <?php endwhile; ?>
                 <?php else: ?>
